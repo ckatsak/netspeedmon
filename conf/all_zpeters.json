@@ -1,0 +1,18 @@
+{
+	"period": "10m",
+	"stdout": true,
+	"measurer": "zpeters/speedtestr",
+	"Twitter": {
+		"consumer_key" : "your-twitter-consumer-key",
+		"consumer_secret": "your-twitter-consumer-secret",
+		"access_token":  "your-twitter-access-token",
+		"access_secret": "your-twitter-access-secret"
+	},
+	"HTTP": {
+		"bind_addr": "0.0.0.0:52626"
+	},
+	"database": {
+		"kind": "mem",
+		"path": "/var/netspeedmon/"
+	}
+}

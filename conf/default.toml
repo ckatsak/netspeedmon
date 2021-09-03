@@ -1,0 +1,9 @@
+period = "10m"
+
+stdout = true
+
+[http]
+
+[database]
+kind = "mem"
+path = "/var/netspeedmon/"

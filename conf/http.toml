@@ -1,0 +1,8 @@
+period = "10m"
+
+[http]
+bind_addr = "0.0.0.0:52626"
+
+[database]
+kind = "mem"
+path = "/var/netspeedmon/"

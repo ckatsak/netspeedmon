@@ -1,0 +1,13 @@
+period = "10m"
+
+stdout = true
+
+[twitter]
+consumer_key = "your-twitter-consumer-key"
+consumer_secret = "your-twitter-consumer-secret"
+access_token =  "your-twitter-access-token"
+access_secret = "your-twitter-access-secret"
+
+#[database]
+#kind = "mem"
+#path = "/var/netspeedmon/"
