@@ -135,7 +135,9 @@ impl Database {
                                             "Retrieved a total of {} measurements",
                                             history.len()
                                         );
-                                        self.plotter.plot(history).await;
+                                        if let Err(err) = self.plotter.plot(history).await {
+                                            error!("Error creating the newest plot: {}", err);
+                                        }
                                     },
                                     Err(e) => {
                                         error!("Failed to retrieve history from store: {}", e);

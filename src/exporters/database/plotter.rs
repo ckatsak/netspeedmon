@@ -6,7 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use chrono::{DateTime, Local};
 #[cfg(feature = "twitter")]
 use plotters::prelude::BitMapBackend;
@@ -100,10 +100,10 @@ impl Plotter {
     }
 
     #[tracing::instrument(skip(self, data))]
-    pub(super) async fn plot(&self, data: Vec<(DateTime<Local>, Measurement)>) {
+    pub(super) async fn plot(&self, data: Vec<(DateTime<Local>, Measurement)>) -> Result<()> {
         if data.len() < 2 {
             info!("Skipping plot since # measurements = {}", data.len());
-            return;
+            return Ok(());
         }
 
         let plot_file_name = self.out_dir.join(PLOT_FILE_NAME);
@@ -122,9 +122,14 @@ impl Plotter {
         };
         backend
             .fill(&WHITE)
-            .expect("failed to fill backend with WHITE");
+            .with_context(|| "failed to fill backend with WHITE")?;
 
-        let datetime_range = self.datetime_range(&data).unwrap();
+        let datetime_range = self.datetime_range(&data).with_context(|| {
+            format!(
+                "Data points == {}, but failed to calculate datetime range",
+                data.len()
+            )
+        })?;
         let mbps_range = self.mbps_range(&data);
         let ping_range = self.ping_range(&data);
 
@@ -135,7 +140,7 @@ impl Plotter {
             .set_label_area_size(LabelAreaPosition::Right, 50)
             .margin(5)
             .build_cartesian_2d(datetime_range.clone(), mbps_range)
-            .expect("failed to build 2D-Cartesian")
+            .with_context(|| "failed to build 2D-Cartesian")?
             .set_secondary_coord(datetime_range, ping_range);
         // Draw primary axes
         chart
@@ -144,13 +149,13 @@ impl Plotter {
             .x_desc("Time")
             .y_desc("Bandwidth (Megabits Per Second)")
             .draw()
-            .expect("failed to draw mesh and/or primary axes");
+            .with_context(|| "failed to draw mesh and/or primary axes")?;
         // Draw secondary axes
         chart
             .configure_secondary_axes()
             .y_desc("Ping Latency (milliseconds)")
             .draw()
-            .expect("failed to draw secondary axes");
+            .with_context(|| "failed to draw secondary axes")?;
 
         // Draw points & time series for download speed on primary axes
         chart
@@ -158,7 +163,7 @@ impl Plotter {
                 data.iter().map(|(ts, m)| (*ts, m.download_speed)),
                 &BLUE,
             ))
-            .expect("failed to draw download speed series on primary axes")
+            .with_context(|| "failed to draw download speed series on primary axes")?
             .label("Download (Mbps)")
             .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &BLUE));
         chart
@@ -166,7 +171,7 @@ impl Plotter {
                 data.iter()
                     .map(|(ts, m)| Circle::new((*ts, m.download_speed), 3, BLUE.filled())),
             )
-            .expect("failed to draw download speed points on primary axes");
+            .with_context(|| "failed to draw download speed points on primary axes")?;
 
         // Draw points & time series for upload speed on primary axes
         chart
@@ -174,7 +179,7 @@ impl Plotter {
                 data.iter().map(|(ts, m)| (*ts, m.upload_speed)),
                 &GREEN,
             ))
-            .expect("failed to draw upload speed series on primary axes")
+            .with_context(|| "failed to draw upload speed series on primary axes")?
             .label("Upload (Mbps)")
             .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &GREEN));
         chart
@@ -182,7 +187,7 @@ impl Plotter {
                 data.iter()
                     .map(|(ts, m)| Circle::new((*ts, m.upload_speed), 3, GREEN.filled())),
             )
-            .expect("failed to draw upload speed points on primary axes");
+            .with_context(|| "failed to draw upload speed points on primary axes")?;
 
         // Draw points & time series for ping latency on secondary axes
         chart
@@ -190,7 +195,7 @@ impl Plotter {
                 data.iter().map(|(ts, m)| (*ts, m.ping_latency)),
                 &RED,
             ))
-            .expect("failed to draw ping latency on secondary axes")
+            .with_context(|| "failed to draw ping latency series on seconday axes")?
             .label("Ping Latency (ms)")
             .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RED));
         chart
@@ -198,7 +203,7 @@ impl Plotter {
                 data.iter()
                     .map(|(ts, m)| Circle::new((*ts, m.ping_latency), 3, RED.filled())),
             )
-            .expect("failed to draw ping latency points on secondary axes");
+            .with_context(|| "failed to draw ping latency points on secondary axes")?;
 
         // Draw labels/legend
         chart
@@ -206,10 +211,14 @@ impl Plotter {
             .border_style(&BLACK)
             .background_style(&WHITE.mix(0.8))
             .draw()
-            .expect("failed to draw series labels");
+            .with_context(|| "failed to draw series labels")?;
 
         // Save it to the local disk
-        backend.present().expect("failed to write plot to file");
+        backend
+            .present()
+            .with_context(|| "failed to write plot to file")?;
         trace!("Saved new plot to local disk");
+
+        Ok(())
     }
 }
