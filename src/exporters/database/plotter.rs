@@ -52,6 +52,8 @@ impl Plotter {
                 if let Err(err) = remove_file(&plot_path) {
                     if !matches!(err.kind(), ErrorKind::NotFound) {
                         bail!("failed to unlink(2) file {:?}: {}", plot_path, err)
+                    } else {
+                        trace!("Failed to unlink(2) file {:?}: {}", plot_path, err);
                     }
                 }
             }
