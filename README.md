@@ -29,13 +29,13 @@ Measurements can be acquired either by calling an external `speedtest` binary wi
 
 This is the default `Measurer`.
 
-It is assumed that a `speedtest` binary exists in `PATH`, which is run by `netspeedmon` in a manner similar to:
+It is assumed that a `speedtest` binary exists in `PATH`, which is run by `netspeedmon` in a manner equivalent to:
 ```console
 $ speedtest --format json --accept-gdpr
 ```
 
-It is assumed that this binary reports the results serialized in JSON format on stdout.
-Binary's stderr is never parsed, although it is being logged as a warning when is is not empty.
+It is assumed that this binary reports its results serialized in JSON format on stdout.
+Binary's stderr is never parsed, although it is being logged when it is not empty.
 
 Furthermore, it is assumed that, in `speedtest` binary's output on stdout, _at least_ the following information can be found:
 - In case of a successful execution:
@@ -83,7 +83,7 @@ Results are plotted only when at least 2 measurements are available.
 ## Reporting
 
 Results can periodically be:
-- stored by a database implementation (although only a naive in-memory implementation exists, for now) (this is necessary enable plotting the time series, but optionally otherwise);
+- stored by a database implementation (although only a naive in-memory implementation exists, for now) (this is necessary to enable plotting the time series, but optional otherwise);
 - written to stdout (configurable through a boolean on the configuration file);
 - served via HTTP, on the `/latest` and `/plot` endpoints (Cargo feature `http` required);
 - tweeted to the configured Twitter account (Cargo feature `twitter` required).
