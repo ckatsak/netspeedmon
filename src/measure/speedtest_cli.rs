@@ -4,39 +4,6 @@ use tracing::{debug, error, trace, warn};
 
 use super::{Measurement, Measurer};
 
-/// TODO: Documentation
-///
-/// # Assumptions about the binary
-///
-/// It is assumed that the 'speedtest' binary reports its results encoded in JSON format on its
-/// stdout. stderr is never parsed, although it is being logged as a warning when is is not empty.
-///
-/// Furthermore, it is assumed that, in 'speedtest' binary's output on stdout, at least the
-/// following information can be found:
-///
-/// - In case of successful execution:
-///
-/// ```json
-/// {
-///     "ping": {
-///         "latency": float (milliseconds)
-///     },
-///     "download": {
-///         "bandwidth": int (bytes per second)
-///     },
-///     "upload": {
-///         "bandwidth": int (bytes per second)
-///     }
-/// }
-/// ```
-///
-/// - In case of error during the execution:
-///
-/// ```json
-/// {
-///     "error": "string"
-/// }
-/// ```
 #[derive(Debug, Default)]
 pub struct SpeedTestCli;
 
@@ -44,7 +11,6 @@ pub struct SpeedTestCli;
 impl Measurer for SpeedTestCli {
     #[tracing::instrument]
     async fn measure(&mut self, deadline: Instant) -> Measurement {
-        // Future for fork + exec + pipe stdout
         let fork_output = Command::new("speedtest")
             .args(&["--format", "json", "--accept-gdpr"])
             .kill_on_drop(true)
@@ -69,9 +35,9 @@ impl Measurer for SpeedTestCli {
                 }
                 Ok(out) => {
                     debug!(
-                        "The execution of the 'speedtest' binary finished with '{}' and the following on stdout: '{}'",
+                        "The execution of the 'speedtest' binary finished with '{}' and stdout: '{:?}'",
                         out.status,
-                        String::from_utf8_lossy(&out.stdout)
+                        std::str::from_utf8(&out.stdout)
                     );
                     out
                 }
@@ -81,8 +47,8 @@ impl Measurer for SpeedTestCli {
         // Handle errors or indications thereof
         if !out.stderr.is_empty() {
             warn!(
-                "The execution of the 'speedtest' binary finished with a non-empty stderr: '{}'",
-                String::from_utf8_lossy(&out.stderr)
+                "The execution of the 'speedtest' binary finished with a non-empty stderr: '{:?}'",
+                std::str::from_utf8(&out.stderr)
             );
         }
         if !out.status.success() {
@@ -120,16 +86,16 @@ impl Measurer for SpeedTestCli {
         // If the execution succeeded, attempt to decode the measurements
         let ping_latency = root["ping"]["latency"]
             .as_f64()
-            .expect("Failed to retrieve ping latency as f64");
+            .expect("failed to retrieve ping latency as f64");
         let download_speed = (root["download"]["bandwidth"]
             .as_u64()
-            .expect("Failed to retrieve download speed as u64")
+            .expect("failed to retrieve download speed as u64")
             * 8) as f64
             / 1000.
             / 1000.;
         let upload_speed = (root["upload"]["bandwidth"]
             .as_u64()
-            .expect("Failed to retrieve upload speed as u64")
+            .expect("failed to retrieve upload speed as u64")
             * 8) as f64
             / 1000.
             / 1000.;
