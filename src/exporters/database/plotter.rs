@@ -88,11 +88,7 @@ impl Plotter {
         for (_, m) in data {
             max = max.max(m.download_speed.max(m.upload_speed));
         }
-        0f64..(if max < 100. {
-            (max / 10.).ceil() * 10.
-        } else {
-            (max / 100.).ceil() * 100.
-        })
+        0f64..(max / 10.).ceil() * 10.
     }
 
     fn ping_range(&self, data: &[(DateTime<Local>, Measurement)]) -> Range<f64> {
