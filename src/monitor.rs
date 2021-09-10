@@ -139,6 +139,7 @@ impl Monitor {
             let http = Http::new(
                 hc,
                 plot_path.as_ref(),
+                config.period,
                 exp_tx.subscribe(),
                 quit_tx.subscribe(),
             )
