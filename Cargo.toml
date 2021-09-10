@@ -1,6 +1,6 @@
 [package]
 name = "netspeedmon"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["Christos Katsakioris <ckatsak@gmail.com>"]
 license = "Apache-2.0"
 repository = "https://github.com/ckatsak/netspeedmon"

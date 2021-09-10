@@ -5,7 +5,7 @@ CARGO  ?= cargo
 DOCKER ?= docker
 
 IMG = ckatsak/netspeedmon
-VERSION := 0.0.2
+VERSION := 0.0.3
 
 
 # TODO: A 'speedtest' binary is not included in the image for now;
